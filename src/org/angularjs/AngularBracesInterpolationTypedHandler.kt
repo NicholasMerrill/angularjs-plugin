@@ -17,15 +17,23 @@ public open class AngularBracesInterpolationTypedHandler(): TypedHandlerDelegate
         if(!AngularJSConfig.braceEnabled) return TypedHandlerDelegate.Result.DEFAULT;
         if (file?.getFileType() == HtmlFileType.INSTANCE)
         {
-            if (c == '{')
+            val leftBraceChar = AngularJSConfig.leftBraceCharacter
+            val rightBraceChar = AngularJSConfig.rightBraceCharacter
+//            var rightBraceChar = ' '
+//            when (leftBraceChar) {
+//                '{' -> rightBraceChar = '}'
+//                '[' -> rightBraceChar = ']'
+//            }
+//            assert(rightBraceChar != ' ');
+            if (c == leftBraceChar)
             {
                 val addWhiteSpaceBetweenBraces = AngularJSConfig.whiteSpace
                 val document: Document? = editor?.getDocument()
                 val offset: Int = editor?.getCaretModel()?.getOffset()!!
                 var chars: CharSequence? = document?.getCharsSequence()
-                if (offset > 0 && (chars?.charAt(offset - 1)) == '{')
+                if (offset > 0 && (chars?.charAt(offset - 1)) == leftBraceChar)
                 {
-                    if (offset < 2 || (chars?.charAt(offset - 2)) != '{')
+                    if (offset < 2 || (chars?.charAt(offset - 2)) != leftBraceChar)
                     {
                         if (alreadyHasEnding(chars, c, offset))
                         {
@@ -34,15 +42,14 @@ public open class AngularBracesInterpolationTypedHandler(): TypedHandlerDelegate
                         else
                         {
                             var interpolation: String? = null
-                            if (c == '{')
+                            if (c == leftBraceChar)
                             {
                                 if(addWhiteSpaceBetweenBraces)
                                 {
-                                    interpolation = "{  }"
-
+                                    interpolation = "${leftBraceChar} ${rightBraceChar}"
                                 }
                                 else{
-                                    interpolation = "{}"
+                                    interpolation = "${leftBraceChar}${rightBraceChar}"
                                 }
                             }
 
@@ -50,7 +57,7 @@ public open class AngularBracesInterpolationTypedHandler(): TypedHandlerDelegate
                             {
                                 if (offset == (chars?.length()) || (offset < (chars?.length())!! && (chars?.charAt(offset)) != '}'))
                                 {
-                                    interpolation += "}"
+                                    interpolation += rightBraceChar
                                 }
 
                                 var move = 2
@@ -80,19 +87,21 @@ public open class AngularBracesInterpolationTypedHandler(): TypedHandlerDelegate
         private open fun alreadyHasEnding(chars: CharSequence?, c: Char, offset: Int): Boolean {
             var i: Int = offset
             var endChar: Char
-            if (c == '{')
+            val leftBraceChar = AngularJSConfig.leftBraceCharacter
+            val rightBraceChar = AngularJSConfig.rightBraceCharacter
+            if (c == leftBraceChar)
             {
-                endChar = '}'
+                endChar = rightBraceChar
             }
             else
             {
                 endChar = c
             }
-            while (i < (chars?.length())!! && ((chars?.charAt(i)) != '{' && (chars?.charAt(i)) != endChar && (chars?.charAt(i)) != '\n'))
+            while (i < (chars?.length())!! && ((chars?.charAt(i)) != leftBraceChar && (chars?.charAt(i)) != endChar && (chars?.charAt(i)) != '\n'))
             {
                 i++
             }
-            if (i + 1 < (chars?.length())!! && (chars?.charAt(i)) == endChar && (chars?.charAt(i + 1)) == '}')
+            if (i + 1 < (chars?.length())!! && (chars?.charAt(i)) == endChar && (chars?.charAt(i + 1)) == rightBraceChar)
             {
                 return true
             }
